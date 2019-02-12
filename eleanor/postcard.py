@@ -123,7 +123,7 @@ class Postcard(object):
 #        ax.set_yticklabels(yticks)
         return ax
 
-    def find_sources(self):
+    def find_sources(self, radius=0.5):
         """Finds the cataloged sources in the postcard and returns a table.
 
         Returns
@@ -131,7 +131,7 @@ class Postcard(object):
         result : astropy.table.Table
             All the sources in a postcard with TIC IDs or Gaia IDs.
         """
-        result = crossmatch_by_position(self.center_radec, 0.5, 'Mast.Tic.Crossmatch').to_pandas()
+        result = crossmatch_by_position(self.center_radec, radius, 'Mast.Tic.Crossmatch').to_pandas()
         result = result[['MatchID', 'MatchRA', 'MatchDEC', 'pmRA', 'pmDEC', 'Tmag']]
         result.columns = ['TessID', 'RA', 'Dec', 'pmRA', 'pmDEC', 'Tmag']
         return result
@@ -143,7 +143,7 @@ class Postcard(object):
 
     @property
     def center_radec(self):
-        return(self.header['CRVAL1'], self.header['CRVAL2'])
+        return (self.header['CRVAL1'], self.header['CRVAL2'])
 
     @property
     def center_xy(self):
