@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from astropy.nddata import Cutout2D
 from photutils import CircularAperture, RectangularAperture, aperture_photometry
 from photutils import MMMBackground
-from lightkurve import SFFCorrector, lightcurve
+from lightkurve import SFFCorrector, lightcurve, search
 from scipy.optimize import minimize
 from astropy import time, coordinates as coord, units as u
 from astropy.coordinates import SkyCoord, Angle
@@ -35,7 +35,7 @@ class TargetData(object):
     source : ellie.Source
         The source object to use.
     height : int, optional
-        Height in pixels of TPF to retrieve. Default value is 13 pixels. Must be an odd number,
+        Height in pixels of TPF to retrieve. Default vadlue is 13 pixels. Must be an odd number,
         or else will return an aperture one pixel taller than requested so target
         falls on central pixel.
     width : int, optional
@@ -136,9 +136,9 @@ class TargetData(object):
         else:            
             self.aperture = None
             if save_postcard == True:
-                self.post_obj = Postcard(source.postcard, source.ELEANORURL)
+                self.post_obj = Postcard(source)
             else:
-                self.post_obj = Postcard(source.postcard, source.ELEANORURL)
+                self.post_obj = Postcard(source)
             self.flux_bkg = self.post_obj.bkg 
             self.get_time(source.coords)
      

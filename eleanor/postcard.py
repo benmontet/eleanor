@@ -3,6 +3,7 @@ import os, sys
 from astropy.io import fits
 import matplotlib.pyplot as plt
 from astropy.wcs import WCS
+from lightkurve import search
 import numpy as np
 import warnings
 import pandas as pd
@@ -46,11 +47,10 @@ class Postcard(object):
         (`x`, `y`) coordinates corresponding to the location of 
         the postcard's (0,0) pixel on the FFI.
     """
-    def __init__(self, filename, ELEANORURL, location=None):
+    def __init__(self, source, location=None):
+
         if location is not None:
-            self.filename = '{}{}'.format(location, filename)
-            self.local_path = copy.copy(self.filename)
-            self.hdu = fits.open(self.local_path)
+            self.post_dir = location
         else:
             self.post_dir = os.path.join(os.path.expanduser('~'), '.eleanor/postcards')
             if os.path.isdir(self.post_dir) == False:
@@ -61,15 +61,14 @@ class Postcard(object):
                     warnings.warn('Warning: unable to create {}. '
                                   'Downloading postcard to the current '
                                   'working directory instead.'.format(self.post_dir))
+            
+#            if os.path.isfile(self.local_path) == False:
+        lk_post = search.search_tesscut('{0} {1}'.format(source.coords[0], source.coords[1])).download(cutout_size=133,
+                                                                                          download_dir=self.post_dir)
+        self.post_lk_obj = lk_post
+        self.header = self.post_lk_obj.hdu[2].header
+        self.local_path = self.post_lk.obj.path
 
-            self.filename = '{}{}'.format(ELEANORURL, filename)
-            self.local_path = '{}/{}'.format(self.post_dir, filename)
-
-            if os.path.isfile(self.local_path) == False:
-                print("Downloading {}".format(self.filename))
-                os.system('cd {} && curl -O -L {}'.format(self.post_dir, self.filename))
-
-            self.hdu = fits.open(self.local_path)
 
     def __repr__(self):
         return "eleanor postcard ({})".format(self.filename)
@@ -142,48 +141,47 @@ class Postcard(object):
 
     @property
     def header(self):
-        return self.hdu[1].header
+        return self.hdu[2].header
 
     @property
     def center_radec(self):
-        return(self.header['CEN_RA'], self.header['CEN_DEC'])
+        return(self.header['CRVAL1'], self.header['CRVAL2'])
 
     @property
     def center_xy(self):
-        return (self.header['CEN_X'],  self.header['CEN_Y'])
-
-    @property
-    def origin_xy(self):
-        return (self.header['POSTPIX1'], self.header['POSTPIX2'])
+        return (self.header['CRPIX1'],  self.header['CRPIX2'])
 
     @property
     def flux(self):
-        return self.hdu[2].data
+        return self.post_lk_obj.flux
 
     @property
     def dimensions(self):
-        return self.flux.shape
+        return self.post_lk_obj.shape
 
     @property
     def flux_err(self):
-        return self.hdu[3].data
-
+        return self.post_lk_obj.flux_err
+    
     @property
     def time(self):
-        return (self.hdu[1].data['TSTOP'] + self.hdu[1].data['TSTART'])/2
+        return self.post_lk_obj.time
 
     @property
     def wcs(self):
-        return WCS(self.header)
+        return WCS(self.hdu[2].header)
 
+    ## LIGHTKURVE OBJECT HAS NO QUALITY FLAGS
     @property
     def quality(self):
         return self.hdu[1].data['QUALITY']
 
+    ## LIGHTKURVE OBJECT HAS NO BACKGROUND
     @property
     def bkg(self):
         return self.hdu[1].data['BKG']
     
+    ## LIGHTKURVE OBJECT HAS NO BARYCORR
     @property 
     def barycorr(self):
         return self.hdu[1].data['BARYCORR']
