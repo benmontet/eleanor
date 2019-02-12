@@ -52,7 +52,7 @@ class Postcard(object):
         if location is not None:
             self.post_dir = location
         else:
-            self.post_dir = os.path.join(os.path.expanduser('~'), '.eleanor/postcards')
+            self.post_dir = os.path.join(os.path.expanduser('~'), '.eleanor', 'postcards')
             if os.path.isdir(self.post_dir) == False:
                 try:
                     os.mkdir(self.post_dir)
