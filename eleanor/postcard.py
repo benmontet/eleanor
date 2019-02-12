@@ -62,16 +62,14 @@ class Postcard(object):
                                   'Downloading postcard to the current '
                                   'working directory instead.'.format(self.post_dir))
             
-#            if os.path.isfile(self.local_path) == False:
         lk_post = search.search_tesscut('{0} {1}'.format(source.coords[0], source.coords[1])).download(cutout_size=133,
                                                                                           download_dir=self.post_dir)
         self.post_lk_obj = lk_post
-        self.header = self.post_lk_obj.hdu[2].header
-        self.local_path = self.post_lk.obj.path
+        self.local_path = self.post_lk_obj.path
 
 
     def __repr__(self):
-        return "eleanor postcard ({})".format(self.filename)
+        return "eleanor postcard ({})".format(self.local_path)
 
     def plot(self, frame=0, ax=None, scale='linear', **kwargs):
         """Plots a single frame of a postcard.
@@ -100,10 +98,10 @@ class Postcard(object):
         if scale is 'log':
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
-                dat = np.log10(self.flux[:, :, frame])
+                dat = np.log10(self.flux[frame])
                 dat[~np.isfinite(dat)] = np.nan
         else:
-            dat = self.flux[:, :, frame]
+            dat = self.flux[frame]
 
         if ('vmin' not in kwargs) & ('vmax' not in kwargs):
             kwargs['vmin'] = np.nanpercentile(dat, 1)
@@ -119,10 +117,10 @@ class Postcard(object):
             cbar.set_label('Flux')
 
         # Reset the x/y ticks to the position in the ACTUAL FFI.
-        xticks = ax.get_xticks() + self.center_xy[0]
-        yticks = ax.get_yticks() + self.center_xy[1]
-        ax.set_xticklabels(xticks)
-        ax.set_yticklabels(yticks)
+#        xticks = ax.get_xticks() + self.center_xy[0]
+#        yticks = ax.get_yticks() + self.center_xy[1]
+#        ax.set_xticklabels(xticks)
+#        ax.set_yticklabels(yticks)
         return ax
 
     def find_sources(self):
@@ -141,7 +139,7 @@ class Postcard(object):
 
     @property
     def header(self):
-        return self.hdu[2].header
+        return self.post_lk_obj.hdu[2].header
 
     @property
     def center_radec(self):
@@ -169,7 +167,7 @@ class Postcard(object):
 
     @property
     def wcs(self):
-        return WCS(self.hdu[2].header)
+        return self.post_lk_obj.wcs
 
     ## LIGHTKURVE OBJECT HAS NO QUALITY FLAGS
     @property
